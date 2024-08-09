@@ -29,14 +29,14 @@ const ChatToggle: React.FC = () => {
           position: "fixed",
           bottom: 16,
           right: 16,
-          background: "linear-gradient(135deg, #a855f7, #6366f1)",
+          background: "linear-gradient(135deg, #4CAF50, #81C784)",
           color: "#fff",
           width: 64,
           height: 64,
           borderRadius: "50%",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
           "&:hover": {
-            background: "linear-gradient(135deg, #6366f1, #a855f7)",
+            background: "linear-gradient(135deg, #388E3C, #66BB6A)",
           },
         }}
       >
