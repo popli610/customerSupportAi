@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, CircularProgress, Grid, IconButton } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import Feedback from "./Feedback";
@@ -11,6 +18,15 @@ interface Message {
   role: "assistant" | "user";
   options?: string[];
 }
+const formatDate = () => {
+  const date = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  };
+  return date.toLocaleDateString("en-US", options);
+};
 
 const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -31,77 +47,145 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
 
+  // const sendMessage = async (newMessage?: string) => {
+  //   if (newMessage) {
+  //     setMessages((messages) => [
+  //       ...messages,
+  //       { role: "user", content: newMessage },
+  //       { role: "assistant", content: "" },
+  //     ]);
+  //   } else {
+  //     const inputMessage = messageInput.trim();
+  //     if (!inputMessage) return;
+
+  //     setMessageInput("");
+  //     setMessages((messages) => [
+  //       ...messages,
+  //       { role: "user", content: inputMessage },
+  //       { role: "assistant", content: "" },
+  //     ]);
+  //   }
+
+  //   setIsLoading(true);
+  //   // setShowFeedback(false);
+  //   try {
+  //     const response = await fetch("/api/chat", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify([
+  //         ...messages,
+  //         { role: "user", content: newMessage },
+  //       ]),
+  //     });
+  //     console.log("After fetch");
+
+  //     const reader = response.body?.getReader();
+  //     const decoder = new TextDecoder();
+
+  //     const readStream = async () => {
+  //       if (!reader) return;
+  //       console.log("Inside readStream");
+
+  //       let done, value;
+  //       let botResponse = "";
+  //       while ((({ done, value } = await reader.read()), !done)) {
+  //         console.log("Reading stream");
+  //         const text = decoder.decode(value || new Uint8Array(), {
+  //           stream: true,
+  //         });
+  //         botResponse += text;
+  //         setMessages((messages) => {
+  //           const lastMessage = messages[messages.length - 1];
+  //           const otherMessages = messages.slice(0, messages.length - 1);
+  //           return [
+  //             ...otherMessages,
+  //             {
+  //               ...lastMessage,
+  //               content: botResponse,
+  //             },
+  //           ];
+  //         });
+  //       }
+  //     };
+  //     setIsLoading(false);
+  //     await readStream();
+  //     console.log("read complete");
+  //     // setShowFeedback(true);
+  //   } catch (error) {
+  //     console.error("Error sending message:", error);
+  //     setIsLoading(false);
+  //   }
+  // };
   const sendMessage = async (newMessage?: string) => {
+    // Update state with the user message
+    let updatedMessages = messages;
     if (newMessage) {
-      setMessages((messages) => [
+      updatedMessages = [
         ...messages,
         { role: "user", content: newMessage },
-        { role: "assistant", content: "" },
-      ]);
+        { role: "assistant", content: "" }, // Prepare placeholder for assistant response
+      ];
     } else {
       const inputMessage = messageInput.trim();
       if (!inputMessage) return;
 
-      setMessageInput("");
-      setMessages((messages) => [
+      setMessageInput(""); // Clear the input field
+      updatedMessages = [
         ...messages,
         { role: "user", content: inputMessage },
-        { role: "assistant", content: "" },
-      ]);
+        { role: "assistant", content: "" }, // Prepare placeholder for assistant response
+      ];
     }
 
+    setMessages(updatedMessages); // Update the state
+
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      setShowFeedback(false);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([
-          ...messages,
-          { role: "user", content: newMessage },
-        ]),
+        body: JSON.stringify(updatedMessages), // Send the updated message array
       });
-      console.log("After fetch");
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-
-      const readStream = async () => {
-        if (!reader) return;
-        console.log("Inside readStream");
-
-        let done, value;
+      if (reader) {
         let botResponse = "";
-        while ((({ done, value } = await reader.read()), !done)) {
-          console.log("Reading stream");
-          const text = decoder.decode(value || new Uint8Array(), {
-            stream: true,
-          });
-          botResponse += text;
-          setMessages((messages) => {
-            const lastMessage = messages[messages.length - 1];
-            const otherMessages = messages.slice(0, messages.length - 1);
+        let done = false;
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+
+          const chunk = decoder.decode(value, { stream: true });
+          botResponse += chunk;
+
+          // Update the assistant's response in the state
+          setMessages((prevMessages) => {
+            const lastMessageIndex = prevMessages.length - 1;
+            const updatedAssistantMessage = {
+              ...prevMessages[lastMessageIndex],
+              content: botResponse,
+            };
+
             return [
-              ...otherMessages,
-              {
-                ...lastMessage,
-                content: botResponse,
-              },
+              ...prevMessages.slice(0, lastMessageIndex),
+              updatedAssistantMessage,
             ];
           });
         }
-      };
+      }
       setIsLoading(false);
-      await readStream();
-      console.log("read complete");
-      setShowFeedback(true);
     } catch (error) {
       console.error("Error sending message:", error);
       setIsLoading(false);
     }
   };
+
   const handleOptionClick = (option: string) => {
     sendMessage(option); // Send the selected option as a message
   };
@@ -150,6 +234,11 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </IconButton>
       </Box>
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+        <Box display="flex" alignItems="center" justifyContent="center">
+          <Typography variant="body2" className="text-gray-500">
+            {formatDate()}
+          </Typography>
+        </Box>
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -175,40 +264,15 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
         )}
-        {/* {messages[messages.length - 1]?.options && (
-          <div className="mt-4 space-y-2">
-            {messages[messages.length - 1].options!.map((option, idx) => (
-              <Button
-                key={idx}
-                variant="contained"
-                onClick={() => handleOptionClick(option)}
-                sx={{
-                  backgroundColor: "#4CAF50",
-                  color: "#fff",
-                  width: "1/2",
-                  padding: "5px",
-                  borderRadius: "20px",
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&:hover": {
-                    backgroundColor: "#388E3C",
-                  },
-                }}
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-        )} */}
         <Grid container spacing={1} justifyContent="center" sx={{ mt: 2 }}>
-          {messages[messages.length - 1].options!.map((option, idx) => (
+          {messages[messages.length - 1].options?.map((option, idx) => (
             <Grid item xs={6} sm={6} key={idx}>
               <Button
                 variant="contained"
                 onClick={() => handleOptionClick(option)}
                 sx={{
                   backgroundColor: "#22c55e ",
-                  color: "#111827 ",
+                  color: "#fff ",
                   padding: "8px",
                   borderRadius: "10px",
                   fontSize: "0.85rem",
