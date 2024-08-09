@@ -1,3 +1,4 @@
+import Login from "@/components/auth/Login";
 import ChatToggle from "../components/Chat/ChatToggle";
 
 const Home: React.FC = () => {
@@ -7,6 +8,7 @@ const Home: React.FC = () => {
         <h1 className="text-3xl font-bold mb-4">
           Welcome to Customer Support Chatbot
         </h1>
+        <Login />
         <ChatToggle />
       </main>
     </div>
