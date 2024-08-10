@@ -13,11 +13,9 @@ import {
 } from "@mui/material";
 import TranslateIcon from "@mui/icons-material/Translate";
 import SendIcon from "@mui/icons-material/Send";
-import CloseIcon from "@mui/icons-material/Close";
 import Feedback from "./Feedback";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Translate } from "@google-cloud/translate/build/src/v2";
 
 interface Message {
   content: string;
@@ -329,28 +327,6 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
       <div className="w-full h-[10px] bg-gradient-to-t from-blue-100 to-white"></div>
       <div className="flex border-t border-gray-300 bg-white">
-        {/* <input
-          type="text"
-          value={messageInput}
-          onKeyPress={handleKeyPress}
-          onChange={(e) => setMessageInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1 text-black p-4 border-none outline-none"
-          // className="flex-1 p-4 border-none outline-none transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
-        /> */}
-        {/* <TextareaAutosize
-          ref={textareaRef}
-          value={messageInput}
-          onKeyPress={handleKeyPress}
-          onChange={(e) => setMessageInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1 text-gray-900 p-4 border-none outline-none resize-none overflow-hidden"
-          minRows={1}
-          style={{
-            maxHeight: "150px", 
-            overflowY: "auto", 
-          }} 
-        /> */}
         <textarea
           ref={textareaRef}
           value={messageInput}
