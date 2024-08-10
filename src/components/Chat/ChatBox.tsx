@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -8,16 +8,23 @@ import {
   Grid,
   IconButton,
   Typography,
+  MenuItem,
+  Menu,
 } from "@mui/material";
+import TranslateIcon from "@mui/icons-material/Translate";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import Feedback from "./Feedback";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Translate } from "@google-cloud/translate/build/src/v2";
 
 interface Message {
   content: string;
   role: "assistant" | "user";
   options?: string[];
 }
+
 const formatDate = () => {
   const date = new Date();
   const options: Intl.DateTimeFormatOptions = {
@@ -39,102 +46,66 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         "Check Symptoms",
         "Get Medical Information",
         "Contact Support",
-      ], // Initial options
+      ],
     },
   ]);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const [messageInput, setMessageInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [language, setLanguage] = useState<string>("en");
+  const [showLanguageChangeText, setShowLanguageChangeText] =
+    useState<boolean>(false);
 
-  // const sendMessage = async (newMessage?: string) => {
-  //   if (newMessage) {
-  //     setMessages((messages) => [
-  //       ...messages,
-  //       { role: "user", content: newMessage },
-  //       { role: "assistant", content: "" },
-  //     ]);
-  //   } else {
-  //     const inputMessage = messageInput.trim();
-  //     if (!inputMessage) return;
+  const translateMessage = async (text: string, targetLang: string) => {
+    if (targetLang === "en") {
+      return text;
+    }
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text,
+        targetLanguage: targetLang,
+      }),
+    });
 
-  //     setMessageInput("");
-  //     setMessages((messages) => [
-  //       ...messages,
-  //       { role: "user", content: inputMessage },
-  //       { role: "assistant", content: "" },
-  //     ]);
-  //   }
+    const data = await response.json();
 
-  //   setIsLoading(true);
-  //   // setShowFeedback(false);
-  //   try {
-  //     const response = await fetch("/api/chat", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify([
-  //         ...messages,
-  //         { role: "user", content: newMessage },
-  //       ]),
-  //     });
-  //     console.log("After fetch");
+    if (!response.ok) {
+      console.error("Translation error:", data.error);
+      return text; // Return the original text in case of an error
+    }
 
-  //     const reader = response.body?.getReader();
-  //     const decoder = new TextDecoder();
+    return data.translatedText;
+  };
 
-  //     const readStream = async () => {
-  //       if (!reader) return;
-  //       console.log("Inside readStream");
-
-  //       let done, value;
-  //       let botResponse = "";
-  //       while ((({ done, value } = await reader.read()), !done)) {
-  //         console.log("Reading stream");
-  //         const text = decoder.decode(value || new Uint8Array(), {
-  //           stream: true,
-  //         });
-  //         botResponse += text;
-  //         setMessages((messages) => {
-  //           const lastMessage = messages[messages.length - 1];
-  //           const otherMessages = messages.slice(0, messages.length - 1);
-  //           return [
-  //             ...otherMessages,
-  //             {
-  //               ...lastMessage,
-  //               content: botResponse,
-  //             },
-  //           ];
-  //         });
-  //       }
-  //     };
-  //     setIsLoading(false);
-  //     await readStream();
-  //     console.log("read complete");
-  //     // setShowFeedback(true);
-  //   } catch (error) {
-  //     console.error("Error sending message:", error);
-  //     setIsLoading(false);
-  //   }
-  // };
   const sendMessage = async (newMessage?: string) => {
     // Update state with the user message
+    audioRef.current?.play();
     let updatedMessages = messages;
+    let translatedMessage = newMessage || messageInput;
     if (newMessage) {
+      translatedMessage = await translateMessage(newMessage, language);
       updatedMessages = [
         ...messages,
-        { role: "user", content: newMessage },
+        { role: "user", content: translatedMessage },
         { role: "assistant", content: "" }, // Prepare placeholder for assistant response
       ];
     } else {
-      const inputMessage = messageInput.trim();
-      if (!inputMessage) return;
+      translatedMessage = await translateMessage(messageInput.trim(), language);
+      if (!translatedMessage) return;
 
       setMessageInput(""); // Clear the input field
       updatedMessages = [
         ...messages,
-        { role: "user", content: inputMessage },
+        { role: "user", content: translatedMessage },
         { role: "assistant", content: "" }, // Prepare placeholder for assistant response
       ];
     }
@@ -142,7 +113,7 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setMessages(updatedMessages); // Update the state
 
     setIsLoading(true);
-
+    setShowFeedback(false);
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -151,12 +122,12 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         },
         body: JSON.stringify(updatedMessages), // Send the updated message array
       });
-
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       if (reader) {
         let botResponse = "";
         let done = false;
+        setIsLoading(false);
         while (!done) {
           const { value, done: readerDone } = await reader.read();
           done = readerDone;
@@ -164,12 +135,17 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           const chunk = decoder.decode(value, { stream: true });
           botResponse += chunk;
 
+          const translatedBotResponse = await translateMessage(
+            botResponse,
+            language
+          );
+
           // Update the assistant's response in the state
           setMessages((prevMessages) => {
             const lastMessageIndex = prevMessages.length - 1;
             const updatedAssistantMessage = {
               ...prevMessages[lastMessageIndex],
-              content: botResponse,
+              content: translatedBotResponse,
             };
 
             return [
@@ -178,12 +154,29 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             ];
           });
         }
+        setShowFeedback(true);
       }
-      setIsLoading(false);
     } catch (error) {
       console.error("Error sending message:", error);
       setIsLoading(false);
     }
+  };
+
+  const toggleLanguageSelect = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLanguageChange = (language: string) => {
+    setLanguage(language);
+    setShowLanguageChangeText(true);
+    handleMenuClose();
+    setTimeout(() => {
+      setShowLanguageChangeText(false);
+    }, 2000);
   };
 
   const handleOptionClick = (option: string) => {
@@ -204,7 +197,7 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter") {
       sendMessage();
     }
@@ -212,6 +205,7 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div className="flex flex-col h-full w-full">
+      <audio ref={audioRef} src="/notification-2.mp3" />
       <Box
         display="flex"
         justifyContent="space-between"
@@ -229,9 +223,39 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             {/* <div className="text-sm">How can I help you today?</div> */}
           </div>
         </Box>
-        <IconButton onClick={onClose} className="text-green-500">
-          <CloseIcon />
-        </IconButton>
+
+        <Box display="flex" alignItems="center">
+          <IconButton onClick={toggleLanguageSelect}>
+            <TranslateIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            sx={{ mr: 2 }}
+          >
+            <MenuItem onClick={() => handleLanguageChange("en")}>
+              English
+            </MenuItem>
+            <MenuItem onClick={() => handleLanguageChange("hi")}>
+              Hindi
+            </MenuItem>
+            <MenuItem onClick={() => handleLanguageChange("es")}>
+              Spanish
+            </MenuItem>
+            <MenuItem onClick={() => handleLanguageChange("de")}>
+              German
+            </MenuItem>
+          </Menu>
+        </Box>
       </Box>
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
         <Box display="flex" alignItems="center" justifyContent="center">
@@ -253,7 +277,10 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   : "bg-blue-50 text-gray-800 rounded-r-lg rounded-tl-lg shadow-lg max-w-sm"
               }`}
             >
-              {msg.content}
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {msg.content}
+              </ReactMarkdown>
+              {/* {msg.content} */}
             </div>
           </div>
         ))}
@@ -290,26 +317,63 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           ))}
         </Grid>
         {showFeedback && <Feedback onSubmit={handleFeedbackSubmit} />}
+        {showLanguageChangeText && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            sx={{ color: "gray ", fontSize: 14, marginTop:"4px" }}
+          >
+            Language changed to {language.toUpperCase()}
+          </Box>
+        )}
       </div>
+      <div className="w-full h-[10px] bg-gradient-to-t from-blue-100 to-white"></div>
       <div className="flex border-t border-gray-300 bg-white">
-        <input
+        {/* <input
           type="text"
           value={messageInput}
           onKeyPress={handleKeyPress}
           onChange={(e) => setMessageInput(e.target.value)}
           placeholder="Type your message..."
           className="flex-1 text-black p-4 border-none outline-none"
+          // className="flex-1 p-4 border-none outline-none transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
+        /> */}
+        {/* <TextareaAutosize
+          ref={textareaRef}
+          value={messageInput}
+          onKeyPress={handleKeyPress}
+          onChange={(e) => setMessageInput(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 text-gray-900 p-4 border-none outline-none resize-none overflow-hidden"
+          minRows={1}
+          style={{
+            maxHeight: "150px", 
+            overflowY: "auto", 
+          }} 
+        /> */}
+        <textarea
+          ref={textareaRef}
+          value={messageInput}
+          onKeyDown={handleKeyPress}
+          onChange={(e) => setMessageInput(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 p-3 text-gray-900 border-none outline-none resize-none overflow-y-auto"
         />
         <button
           onClick={() => sendMessage()}
-          // disabled={!messageInput.trim()}
-          className={`p-3 ${
+          disabled={!messageInput.trim()}
+          className={`p-3 rounded-full h-12 w-12 mt-2 mr-2 pt-1 ${
             messageInput.trim()
-              ? "bg-green-500 text-white hover:bg-green-600 transition duration-300 ease-in-out"
-              : "bg-gray-300 text-gray-600 cursor-not-allowed"
+              ? "bg-transparent text-green-500 hover:bg-gray-300 transition duration-300 ease-in-out"
+              : "bg-transparent text-gray-300 cursor-not-allowed"
           }`}
         >
-          <SendIcon />
+          <SendIcon
+            sx={{
+              fontSize: 28, // Size of the icon to match the image
+              transform: "rotate(-40deg)", // Optional: add a slight rotation if you want the icon to tilt
+            }}
+          />
         </button>
       </div>
     </div>
