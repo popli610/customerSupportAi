@@ -1,0 +1,122 @@
+[
+  {
+    "speciality": "Cardiology",
+    "causes": "Coronary Artery Disease (CAD), Hypertension, Valvular Heart Diseases, Congenital Heart Defects, Arrhythmias",
+    "symptoms": "Shortness of Breath,  Chest Pain (Angina), Fatigue, Palpitations, Swelling (Edema)",
+    "treatment": "Medications , Lifestyle Changes , Lypass Surgery , Lardiac Rehabilitation Angioplasty and Stent Placement"
+  },
+  {
+    "speciality": "Dermatology",
+    "causes": "Skin conditions, Allergies, Autoimmune disorders, Infections, Genetics",
+    "symptoms": "Rashes, Itching, Dryness, Redness, Blisters",
+    "treatment": "Topical creams, UV therapy, Antihistamines, Moisturizers, Steroids"
+  },
+  {
+    "speciality": "Neurology",
+    "causes": "Neurodegenerative diseases, Trauma, Infections, Genetic factors, Autoimmune conditions",
+    "symptoms": "Headaches, Seizures, Numbness, Weakness, Memory loss",
+    "treatment": "Medications, Physical therapy, Surgery, Lifestyle modifications, Cognitive rehabilitation"
+  },
+  {
+    "speciality": "Gastroenterology",
+    "causes": "Dietary factors, Infections, Inflammatory conditions, Medications, Stress",
+    "symptoms": "Abdominal pain, Diarrhea, Constipation, Bloating, Nausea",
+    "treatment": "Dietary changes, Medications (antacids, laxatives), Endoscopy, Surgery, Probiotics"
+  },
+  {
+    "speciality": "Oncology",
+    "causes": "Genetic mutations, Environmental factors, Lifestyle choices, Viral infections, Radiation exposure",
+    "symptoms": "Unexplained weight loss, Fatigue, Pain, Changes in skin or moles, Persistent cough",
+    "treatment": "Surgery, Chemotherapy, Radiation therapy, Immunotherapy, Targeted therapy"
+  },
+  {
+    "speciality": "Endocrinology",
+    "causes": "Hormonal imbalances, Autoimmune disorders, Tumors, Medications, Genetics",
+    "symptoms": "Fatigue, Weight changes, Mood swings, Thirst, Hair loss",
+    "treatment": "Hormone replacement therapy, Lifestyle adjustments, Surgery, Medications (insulin, thyroid hormones)"
+  },
+  {
+    "speciality": "Rheumatology",
+    "causes": "Autoimmune diseases, Inflammation, Genetics, Environmental factors, Infections",
+    "symptoms": "Joint pain, Stiffness, Swelling, Fatigue, Skin rashes",
+    "treatment": "Anti-inflammatory medications, Physical therapy, Immunosuppressants, Lifestyle modifications, Biologics"
+  },
+  {
+    "speciality": "Nephrology",
+    "causes": "Kidney diseases, Diabetes, High blood pressure, Autoimmune conditions, Medications",
+    "symptoms": "Swelling, High blood pressure, Fatigue, Changes in urine output, Anemia",
+    "treatment": "Dialysis, Kidney transplant, Medications (ACE inhibitors, diuretics)"
+  },
+  {
+    "speciality": "Pulmonology",
+    "causes": "Lung conditions, Smoking, Pollution, Infections, Occupational exposure",
+    "symptoms": "Shortness of breath, Cough, Wheezing, Chest pain, Fatigue",
+    "treatment": "Inhalers, Oxygen therapy, Pulmonary rehabilitation, Medications (bronchodilators)"
+  },
+  {
+    "speciality": "Hematology",
+    "causes": "Blood disorders, Anemia, Bleeding disorders, Leukemia, Clotting disorders",
+    "symptoms": "Fatigue, Pale skin, Easy bruising, Enlarged lymph nodes, Recurrent infections",
+    "treatment": "Blood transfusions, Chemotherapy, Bone marrow transplant, Anticoagulants"
+  },
+  {
+    "speciality": "Ophthalmology",
+    "causes": "Eye diseases, Refractive errors, Age-related changes, Infections, Trauma",
+    "symptoms": "Blurred vision, Redness, Dry eyes, Eye pain, Sensitivity to light",
+    "treatment": "Glasses, Contact lenses, Eye drops, Laser surgery, Cataract surgery"
+  },
+  {
+    "speciality": "Orthopedics",
+    "causes": "Musculoskeletal injuries, Osteoarthritis, Rheumatoid arthritis, Fractures, Sports-related trauma",
+    "symptoms": "Joint pain, Stiffness, Swelling, Limited mobility, Muscle weakness",
+    "treatment": "Physical therapy, Pain management, Joint replacement, Casting"
+  },
+  {
+    "speciality": "Urology",
+    "causes": "Urinary tract issues, Kidney stones, Prostate problems, UTIs, Bladder cancer",
+    "symptoms": "Frequent urination, Painful urination, Blood in urine, Incontinence, Erectile dysfunction",
+    "treatment": "Medications (antibiotics, alpha blockers), Surgery, Lifestyle changes"
+  },
+  {
+    "speciality": "Psychiatry",
+    "causes": "Mental health conditions, Genetics, Trauma, Stress, Substance abuse",
+    "symptoms": "Depression, Anxiety, Mood swings, Hallucinations, Suicidal thoughts",
+    "treatment": "Therapy (CBT, psychotherapy), Medications (antidepressants, antipsychotics)"
+  },
+  {
+    "speciality": "Obstetrics and Gynecology",
+    "causes": "Women's health issues, Pregnancy, Menstrual disorders, Hormonal imbalances, Endometriosis",
+    "symptoms": "Menstrual irregularities, Pelvic pain, Vaginal bleeding, Infertility, Breast changes",
+    "treatment": "Prenatal care, Hormone therapy, Surgery (hysterectomy, C-section)"
+  },
+  {
+    "speciality": "Allergy and Immunology",
+    "causes": "Allergic reactions, Pollen, Food allergens, Insect stings, Medications",
+    "symptoms": "Sneezing, Hives, Itchy eyes, Anaphylaxis, Runny nose",
+    "treatment": "Antihistamines, Epinephrine auto-injectors, Allergen avoidance"
+  },
+  {
+    "speciality": "Infectious Diseases",
+    "causes": "Bacterial, Viral infections, Fungal infections, Parasitic infections, Immunodeficiency",
+    "symptoms": "Fever, Fatigue, Chills, Sweating, Skin rashes",
+    "treatment": "Antibiotics, Antivirals, Antifungals, Vaccinations"
+  },
+  {
+    "speciality": "Geriatrics",
+    "causes": "Aging-related conditions, Frailty, Cognitive decline, Osteoporosis, Polypharmacy",
+    "symptoms": "Memory loss, Balance problems, Weakness, Falls, Social isolation",
+    "treatment": "Supportive care, Fall prevention strategies, Medication review"
+  },
+  {
+    "speciality": "Pediatrics",
+    "causes": "Childhood illnesses, Vaccination gaps, Growth disorders, Developmental delays, Infections",
+    "symptoms": "Fever, Cough, Rash, Irritability, Poor feeding",
+    "treatment": "Vaccinations, Pediatricians, Supportive care, Antibiotics (if needed)"
+  },
+  {
+    "speciality": "Otolaryngology (ENT)",
+    "causes": "Ear, nose, throat issues, Allergies, Infections, Structural abnormalities, Tumors",
+    "symptoms": "Hearing loss, Sinusitis, Sore throat, Nasal congestion, Dizziness",
+    "treatment": "Surgery (tonsillectomy, adenoidectomy), Medications (antibiotics, decongestants)"
+  }
+]

@@ -16,6 +16,9 @@ import SendIcon from "@mui/icons-material/Send";
 import Feedback from "./Feedback";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useSession } from "next-auth/react";
+
+import { getServerSession } from "next-auth";
 
 interface Message {
   content: string;
@@ -34,10 +37,15 @@ const formatDate = () => {
 };
 
 const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  
+const session = useSession()
+const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(" ") || ''
+
+
   const [messages, setMessages] = useState<Message[]>([
     {
       content:
-        "Hello! I'm Dr. HeisenBot. How can I assist you with your health today?",
+        `Hello ${fullNameFormatted} ! I'm Dr. HeisenBot. How can I assist you with your health today?`,
       role: "assistant",
       options: [
         "Book an Appointment",

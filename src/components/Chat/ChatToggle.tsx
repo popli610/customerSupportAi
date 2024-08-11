@@ -6,6 +6,8 @@ import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import ChatBox from "./ChatBox";
 import TextsmsIcon from "@mui/icons-material/Textsms";
+import { useSession } from "next-auth/react";
+
 
 const ChatToggle: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -14,18 +16,21 @@ const ChatToggle: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
+  const session = useSession()
+  const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(" ") || ''
+
   return (
+    
     <div>
       <div
-        className={`fixed bottom-24 right-4 w-[28rem] h-[36rem] bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-200 ease-in-out ${
-          isOpen
+        className={`fixed bottom-24 right-4 w-[28rem] h-[36rem] bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-200 ease-in-out ${isOpen
             ? "translate-y-0 opacity-100 z-10"
             : "translate-y-full opacity-0 z-0"
-        }`}
+          }`}
       >
         {isOpen && <ChatBox onClose={toggleChat} />}
       </div>
-      <Fab
+      {session.data && <Fab
         color="primary"
         onClick={toggleChat}
         sx={{
@@ -47,9 +52,8 @@ const ChatToggle: React.FC = () => {
       >
         {/* Chat Icon */}
         <div
-          className={`transform transition-transform duration-300 ease-in-out ${
-            isOpen ? "rotate-[90deg] opacity-0" : "rotate-0 opacity-100"
-          }`}
+          className={`transform transition-transform duration-300 ease-in-out ${isOpen ? "rotate-[90deg] opacity-0" : "rotate-0 opacity-100"
+            }`}
           style={{
             position: "absolute",
             visibility: isOpen ? "hidden" : "visible",
@@ -60,9 +64,8 @@ const ChatToggle: React.FC = () => {
 
         {/* Close Icon */}
         <div
-          className={`transform transition-transform duration-300 ease-in-out ${
-            isOpen ? "rotate-0 opacity-100" : "-rotate-[90deg] opacity-0"
-          }`}
+          className={`transform transition-transform duration-300 ease-in-out ${isOpen ? "rotate-0 opacity-100" : "-rotate-[90deg] opacity-0"
+            }`}
           style={{
             position: "absolute",
             visibility: isOpen ? "visible" : "hidden",
@@ -71,6 +74,7 @@ const ChatToggle: React.FC = () => {
           <CloseIcon sx={{ fontSize: 32 }} />
         </div>
       </Fab>
+      }
     </div>
   );
 };
