@@ -1,7 +1,5 @@
 'use client'
 
-import { Input } from "../../../components/ui/input"
-import { Button } from "../../../components/ui/button"
 import { useChat } from "ai/react"
 import { useRef, useEffect } from 'react'
 import SendIcon from "@mui/icons-material/Send";
@@ -19,7 +17,6 @@ export function ChatBoxRAG() {
   })
 
   const session = useSession()
-const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(" ") || ''
 
 
   const chatParent = useRef<HTMLUListElement>(null)
@@ -31,7 +28,7 @@ const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str
     }
   })
 
-  return !session.data? (
+  return session.data? (
     
       
     <main className="flex flex-col w-[30vw] h-screen max-h-dvh  mt-10 bg-slate-300 
@@ -40,13 +37,8 @@ const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str
       <header className="p-4 border-b w-full max-w-3xl mx-auto">
         <h1
           // className="text-2xl text-slate-800 font-bold">
-          className="p-5 bg-gradient-to-r from-blue-100 to-white text-gray-900 rounded-t-lg shadow-lg font-bold uppercase">
+          className="p-5 bg-gradient-to-r from-blue-100 to-white text-gray-900 rounded-t-lg shadow-lg font-bold uppercase">Dr Heisenbot
 
-Medi
-<span className="text-blue-500">
-
-KnowBot
-</span>
 </h1>
       </header>
 
