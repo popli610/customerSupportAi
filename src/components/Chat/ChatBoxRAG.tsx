@@ -3,7 +3,8 @@
 import { useChat } from "ai/react"
 import { useRef, useEffect } from 'react'
 import SendIcon from "@mui/icons-material/Send";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { Button } from "@mui/material";
 
 
 
@@ -28,18 +29,20 @@ export function ChatBoxRAG() {
     }
   })
 
-  return session.data? (
-    
-      
+  return session.data ? (
+
+
     <main className="flex flex-col w-[30vw] h-screen max-h-dvh  mt-10 bg-slate-300 
     left-0 rounded-lg">
+              <Button variant="contained" className="absolute top-2 right-4" onClick={() => signOut()}>Logout</Button>
+
 
       <header className="p-4 border-b w-full max-w-3xl mx-auto">
         <h1
           // className="text-2xl text-slate-800 font-bold">
           className="p-5 bg-gradient-to-r from-blue-100 to-white text-gray-900 rounded-t-lg shadow-lg font-bold uppercase">Dr Heisenbot
 
-</h1>
+        </h1>
       </header>
 
       <section className="p-4 gap-1">
@@ -88,5 +91,5 @@ export function ChatBoxRAG() {
       </section>
     </main>)
     : null
-  
+
 }

@@ -16,11 +16,13 @@ const Login = () => {
             <div  className='text-slate-300 w-full p-2 text-2xl'>
                 {fullNameFormatted || "Guest"}
             </div>
-            <Button variant="contained"      onClick={() => signIn('google')}>
-            {/* //  className="relative inline-flex w-[20rem] h-24  overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"> */}
-                LOGIN
-                
-            </Button>
+         
+                <Button variant="contained" onClick={() => signIn('google')}>
+                {/* //  className="relative inline-flex w-[20rem] h-24  overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"> */}
+                    LOGIN
+                    
+                </Button>
+            
         </Stack>
     )
 }
