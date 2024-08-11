@@ -1,0 +1,11 @@
+[33m6952c11[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: revert: Revert "fixed issues"
+[33md48cb3a[m[33m ([m[1;31morigin/chatbot[m[33m)[m HEAD@{1}: Branch: renamed refs/heads/main to refs/heads/main
+[33md48cb3a[m[33m ([m[1;31morigin/chatbot[m[33m)[m HEAD@{3}: checkout: moving from chatbot to main
+[33m5191f20[m[33m ([m[1;32mchatbot[m[33m)[m HEAD@{4}: commit: made changes
+[33md48cb3a[m[33m ([m[1;31morigin/chatbot[m[33m)[m HEAD@{5}: checkout: moving from main to chatbot
+[33md48cb3a[m[33m ([m[1;31morigin/chatbot[m[33m)[m HEAD@{6}: commit: fixed issues
+[33m4330aca[m HEAD@{7}: commit: second commit
+[33me78069c[m HEAD@{8}: Branch: renamed refs/heads/main to refs/heads/main
+[33me78069c[m HEAD@{10}: commit: first commit
+[33m794b209[m HEAD@{11}: Branch: renamed refs/heads/master to refs/heads/main
+[33m794b209[m HEAD@{13}: commit (initial): Initial commit from Create Next App
