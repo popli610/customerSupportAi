@@ -120,6 +120,7 @@ const fullNameFormatted = session?.data?.user?.name?.split(" ").map((str) => str
 
     setIsLoading(true);
     setShowFeedback(false);
+    
     try {
       const response = await fetch("/api/chat", {
         method: "POST",

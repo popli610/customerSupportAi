@@ -1,6 +1,5 @@
 import Login from "@/components/auth/Login";
 import ChatToggle from "../components/Chat/ChatToggle";
-import { ChatBoxRAG } from "@/components/Chat/ChatBoxRAG";
 
 const Home: React.FC = () => {
   return (
@@ -12,7 +11,7 @@ const Home: React.FC = () => {
         <Login />
         <div>
 
-          <ChatBoxRAG />
+          {/* <ChatBoxRAG /> */}
           <ChatToggle />
         </div>
 
