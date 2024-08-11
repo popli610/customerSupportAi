@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
@@ -10,18 +10,107 @@ import {
   Typography,
   MenuItem,
   Menu,
+  TextField,
+  Popper,
 } from "@mui/material";
 import TranslateIcon from "@mui/icons-material/Translate";
 import SendIcon from "@mui/icons-material/Send";
 import Feedback from "./Feedback";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MenuIcon from "@mui/icons-material/Menu";
+
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 interface Message {
   content: string;
   role: "assistant" | "user";
   options?: string[];
 }
+
+import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import { db } from "../../lib/firebase"; // Adjust the path to your firebaseConfig file
+import { TimeSlot } from "../../interfaces/TimeSlot"; // Import your TimeSlot interface
+
+import { doc, updateDoc } from "firebase/firestore";
+
+// Function to fetch available slots
+async function getAvailableSlots(date: string): Promise<TimeSlot[]> {
+  await createSlotsIfNotExist(date);
+  console.log("Querying for date:", date); // Log the date being queried
+  const slotsQuery = query(
+    collection(db, "time_slots"),
+    where("date", "==", date),
+    where("is_booked", "==", false)
+  );
+
+  const querySnapshot = await getDocs(slotsQuery);
+  const availableSlots = querySnapshot.docs.map(
+    (doc) =>
+      ({
+        id: doc.id,
+        ...doc.data(),
+      } as TimeSlot)
+  );
+
+  console.log("Available slots:", availableSlots); // Log the result of the query
+
+  return availableSlots;
+}
+
+async function bookSlot(slotId: string) {
+  try {
+    const slotRef = doc(db, "time_slots", slotId);
+    await updateDoc(slotRef, {
+      is_booked: true,
+    });
+  } catch (error) {
+    console.error("Error booking slot: ", error);
+    throw new Error("Failed to book slot");
+  }
+}
+
+async function createSlotsIfNotExist(date: string): Promise<void> {
+  const slotsQuery = query(
+    collection(db, "time_slots"),
+    where("date", "==", date)
+  );
+
+  const querySnapshot = await getDocs(slotsQuery);
+
+  if (querySnapshot.empty) {
+    const slots = generateAllSlotsForDate(date);
+    const batch = writeBatch(db); // Create a batch
+
+    slots.forEach((time) => {
+      const slotRef = doc(collection(db, "time_slots")); // Create a new doc reference
+      batch.set(slotRef, {
+        date,
+        time,
+        is_booked: false,
+      });
+    });
+
+    await batch.commit(); // Commit the batch
+  }
+}
+
+function generateAllSlotsForDate(date: string): string[] {
+  // Example: generate slots every hour from 9 AM to 5 PM
+  return [
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+  ];
+}
+
 
 const formatDate = () => {
   const date = new Date();
@@ -59,10 +148,23 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [showLanguageChangeText, setShowLanguageChangeText] =
     useState<boolean>(false);
 
+  const [bookingStep, setBookingStep] = useState<number>(0);
+
+  // State for Date and Time pickers
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  const [restartAnchorEl, setRestartAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+
+  const [textAreaDisabled, setTextAreaDisabled] = useState<boolean>(true);
+
+
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+
+
   const translateMessage = async (text: string, targetLang: string) => {
-    if (targetLang === "en") {
-      return text;
-    }
     const response = await fetch("/api/translate", {
       method: "POST",
       headers: {
@@ -85,33 +187,21 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   const sendMessage = async (newMessage?: string) => {
-    // Update state with the user message
-    audioRef.current?.play();
-    let updatedMessages = messages;
-    let translatedMessage = newMessage || messageInput;
-    if (newMessage) {
-      translatedMessage = await translateMessage(newMessage, language);
-      updatedMessages = [
-        ...messages,
-        { role: "user", content: translatedMessage },
-        { role: "assistant", content: "" }, // Prepare placeholder for assistant response
-      ];
-    } else {
-      translatedMessage = await translateMessage(messageInput.trim(), language);
-      if (!translatedMessage) return;
-
-      setMessageInput(""); // Clear the input field
-      updatedMessages = [
-        ...messages,
-        { role: "user", content: translatedMessage },
-        { role: "assistant", content: "" }, // Prepare placeholder for assistant response
-      ];
+    let messageToSend = newMessage ? newMessage.trim() : messageInput.trim();
+    setMessageInput("");
+    if (!messageToSend) return;
+    if (language !== "en") {
+      messageToSend = await translateMessage(messageToSend, language);
     }
-
-    setMessages(updatedMessages); // Update the state
-
+    const updatedMessages: Message[] = [
+      ...messages,
+      { role: "user", content: messageToSend },
+      { role: "assistant", content: "" }, // Placeholder for assistant response
+    ];
+    setMessages(updatedMessages);
     setIsLoading(true);
     setShowFeedback(false);
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -132,12 +222,13 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           const chunk = decoder.decode(value, { stream: true });
           botResponse += chunk;
-
-          const translatedBotResponse = await translateMessage(
-            botResponse,
-            language
-          );
-
+          let translatedBotResponse = botResponse;
+          if (language !== "en") {
+            translatedBotResponse = await translateMessage(
+              botResponse,
+              language
+            );
+          }
           // Update the assistant's response in the state
           setMessages((prevMessages) => {
             const lastMessageIndex = prevMessages.length - 1;
@@ -177,8 +268,23 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }, 2000);
   };
 
-  const handleOptionClick = (option: string) => {
-    sendMessage(option); // Send the selected option as a message
+  const handleOptionClick = async (option: string) => {
+    if (option === "Book an Appointment") {
+      setBookingStep(1);
+      const translatedMessage = await translateIfNeeded(
+        "Please provide your name:"
+      );
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant",
+          content: translatedMessage,
+        },
+      ]);
+    } else {
+      await sendMessage(option); // Handle other options normally
+    }
+    setTextAreaDisabled(false);
   };
   const handleFeedbackSubmit = async (rating: number) => {
     setShowFeedback(false);
@@ -195,10 +301,192 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter") {
-      sendMessage();
+  const translateIfNeeded = async (text: string) => {
+    return language !== "en" ? await translateMessage(text, language) : text;
+  };
+  //  *************boooking process************
+  const handleBookingProcess = async (step: number, userInput: string) => {
+    let updatedMessages = [...messages];
+    setMessageInput("");
+    setTextAreaDisabled(true);
+
+    switch (step) {
+      case 1:
+        updatedMessages.push({ role: "user", content: userInput });
+        updatedMessages.push({
+          role: "assistant",
+          content: await translateIfNeeded(
+            "Great! Now, could you please select your preferred date?"
+          ),
+        });
+        setBookingStep(2);
+        break;
+
+      case 2:
+        if (selectedDate) {
+          updatedMessages.push({
+            role: "user",
+            content: selectedDate.toLocaleDateString(),
+          });
+
+          try {
+            const availableSlots = await getAvailableSlots(
+              selectedDate.toISOString().split("T")[0]
+            );
+            if (availableSlots.length > 0) {
+              setAvailableSlots(availableSlots);
+              updatedMessages.push({
+                role: "assistant",
+                content: await translateIfNeeded(
+                  "And what time works best for you? Here are the available slots:"
+                ),
+              });
+              setBookingStep(3);
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: await translateIfNeeded(
+                  "Sorry, there are no available slots on this date. Please select another date."
+                ),
+              });
+              setBookingStep(2); // Ask for date again
+            }
+          } catch (error) {
+            console.error("Error fetching available slots:", error);
+            updatedMessages.push({
+              role: "assistant",
+              content: await translateIfNeeded(
+                "An error occurred while checking available slots. Please try again later."
+              ),
+            });
+            setBookingStep(2); // Ask for date again
+          }
+
+          setSelectedDate(null); // Reset date selection
+          setTextAreaDisabled(true); // Ensure it's disabled during time selection
+        }
+        break;
+
+      case 3:
+        updatedMessages.push({
+          role: "user",
+          content: userInput,
+        });
+        updatedMessages.push({
+          role: "assistant",
+          content: await translateIfNeeded(
+            "Finally, could you provide a brief reason for the appointment?"
+          ),
+        });
+        setBookingStep(4);
+        setSelectedTime(null);
+        setTextAreaDisabled(false);
+        break;
+
+      case 4:
+        updatedMessages.push({ role: "user", content: userInput });
+        const { name, date, time, reason } =
+          extractBookingDetails(updatedMessages);
+
+        try {
+          const selectedSlot = availableSlots.find(
+            (slot) => slot.time === time
+          );
+          console.log(availableSlots);
+          console.log(time);
+          if (selectedSlot) {
+            await bookSlot(selectedSlot.id!);
+            updatedMessages.push({
+              role: "assistant",
+              content: await translateIfNeeded(
+                "Your appointment has been successfully booked."
+              ),
+            });
+          } else {
+            updatedMessages.push({
+              role: "assistant",
+              content: await translateIfNeeded(
+                "Selected slot is no longer available. Please try again."
+              ),
+            });
+          }
+        } catch (error) {
+          updatedMessages.push({
+            role: "assistant",
+            content: await translateIfNeeded(
+              "An error occurred while booking your appointment. Please try again."
+            ),
+          });
+        }
+
+        setBookingStep(0); // Reset booking step
+        setShowFeedback(true);
+        setTextAreaDisabled(false); // Re-enable the textarea after the process
+        break;
+
+      default:
+        break;
     }
+
+    setMessages(updatedMessages);
+  };
+
+  const extractBookingDetails = (messages: Message[]) => {
+    const name = messages[messages.length - 7]?.content;
+    const date = messages[messages.length - 5]?.content;
+    const time = messages[messages.length - 3]?.content;
+    const reason = messages[messages.length - 1]?.content;
+
+    return { name, date, time, reason };
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      audioRef.current?.play();
+      if (bookingStep > 0) {
+        handleBookingProcess(bookingStep, messageInput);
+      } else {
+        sendMessage();
+      }
+    }
+  };
+
+  const timeSlots = ["11:00", "12:00", "13:00", "17:00", "18:00", "19:00"];
+
+  const handleTimeSelection = (time: string) => {
+    console.log("Selected Time:", time); // Debugging: Check if time is captured
+    setSelectedTime(time); // Update the state
+    handleBookingProcess(3, time); // Call the booking process
+  };
+
+  //restarting the convo
+  const handleRestartConversation = () => {
+    setShowFeedback(false);
+    setTextAreaDisabled(true);
+    setMessages([
+      {
+        content:
+          "Hello! I'm Dr. HeisenBot. How can I assist you with your health today?",
+        role: "assistant",
+        options: [
+          "Book an Appointment",
+          "Check Symptoms",
+          "Get Medical Information",
+          "Contact Support",
+        ],
+      },
+    ]);
+    setRestartAnchorEl(null); // Close the menu
+  };
+
+  // Function to handle menu opening
+  const handleRestartMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setRestartAnchorEl(event.currentTarget);
+  };
+
+  const handleRestartMenuClose = () => {
+    setRestartAnchorEl(null);
   };
 
   return (
@@ -223,7 +511,7 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </Box>
 
         <Box display="flex" alignItems="center">
-          <IconButton onClick={toggleLanguageSelect}>
+          <IconButton onClick={toggleLanguageSelect} className="mr-2 ml-2">
             <TranslateIcon />
           </IconButton>
           <Menu
@@ -232,13 +520,13 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onClose={handleMenuClose}
             anchorOrigin={{
               vertical: "bottom",
-              horizontal: "center",
+              horizontal: "left",
             }}
             transformOrigin={{
               vertical: "top",
-              horizontal: "center",
+              horizontal: "left",
             }}
-            sx={{ mr: 2 }}
+            // sx={{ mr: 2 }}
           >
             <MenuItem onClick={() => handleLanguageChange("en")}>
               English
@@ -266,10 +554,10 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             key={index}
             className={`mb-3 flex items-end ${
               msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
+            } `}
           >
             <div
-              className={`inline-block p-3 rounded-lg ${
+              className={`inline-block p-3 ${
                 msg.role === "user"
                   ? "bg-green-500 text-white rounded-l-lg rounded-tr-lg shadow-lg"
                   : "bg-blue-50 text-gray-800 rounded-r-lg rounded-tl-lg shadow-lg max-w-sm"
@@ -319,21 +607,103 @@ const ChatBox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <Box
             display="flex"
             justifyContent="center"
-            sx={{ color: "gray ", fontSize: 14, marginTop:"4px" }}
+            sx={{ color: "gray ", fontSize: 14, marginTop: "4px" }}
           >
             Language changed to {language.toUpperCase()}
           </Box>
         )}
+        {bookingStep === 2 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            color="black"
+            my={2}
+          >
+            <ReactDatePicker
+              selected={selectedDate}
+              className="bg-blue-50  cursor-pointer p-3 text-gray-800  rounded-lg shadow-lg max-w-sm"
+              onChange={(date) => {
+                if (date) {
+                  setSelectedDate(date); // Update the state first
+                }
+              }}
+              onCalendarClose={() => {
+                if (selectedDate) {
+                  handleBookingProcess(2, selectedDate.toLocaleDateString()); // Then, call the booking process
+                }
+              }}
+              dateFormat="MM/dd/yyyy"
+              placeholderText="Select a date"
+              minDate={new Date()} // Disable dates before today
+              maxDate={new Date(new Date().setMonth(new Date().getMonth() + 1))} // Disable dates after one month from today
+            />
+          </Box>
+        )}
+
+        {bookingStep === 3 && (
+          <Grid container spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+            {availableSlots.map((slot, idx) => (
+              <Grid item xs={6} sm={4} key={idx}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleTimeSelection(slot.time)}
+                  sx={{
+                    backgroundColor: "#eff6ff", // Blue color for the buttons
+                    color: "#000",
+                    padding: "8px",
+                    borderRadius: "10px",
+                    fontSize: "0.85rem",
+                    fontWeight: "regular",
+                    textTransform: "none",
+                    width: "100%",
+                    "&:hover": {
+                      backgroundColor: "#bfdbfe", // Slightly darker blue on hover
+                    },
+                  }}
+                >
+                  {slot.time}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </div>
       <div className="w-full h-[10px] bg-gradient-to-t from-blue-100 to-white"></div>
+
       <div className="flex border-t border-gray-300 bg-white">
+        <IconButton onClick={handleRestartMenuOpen} className="mt-2 ml-2">
+          <MenuIcon />
+        </IconButton>
+        <Menu
+          anchorEl={restartAnchorEl}
+          open={Boolean(restartAnchorEl)}
+          onClose={handleRestartMenuClose}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "left",
+          }}
+          transformOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        >
+          <MenuItem onClick={handleRestartConversation}>
+            Restart Conversation
+          </MenuItem>
+        </Menu>
+
         <textarea
           ref={textareaRef}
           value={messageInput}
           onKeyDown={handleKeyPress}
           onChange={(e) => setMessageInput(e.target.value)}
           placeholder="Type your message..."
-          className="flex-1 p-3 text-gray-900 border-none outline-none resize-none overflow-y-auto"
+          className={`flex-1 h-16 p-4 text-gray-900 border-none outline-none resize-none overflow-y-auto ${
+            textAreaDisabled ? "cursor-not-allowed" : ""
+          } `}
+          style={{ minHeight: "50px", maxHeight: "150px" }}
+          disabled={textAreaDisabled}
         />
         <button
           onClick={() => sendMessage()}

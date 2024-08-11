@@ -1,75 +1,63 @@
-"use client";
+//from new branch
 
-import { useState } from "react";
-import { signIn, getCsrfToken } from "next-auth/react";
-import {
-  GoogleSignInButton,
-  GithubSignInButton,
-} from "@/components/Chat/authButtons";
-import { CredentialsForm } from "@/components/Chat/credentialsForm";
-import { useRouter } from "next/navigation";
+import React from "react";
+import Header from "../components/Chat/Header"
+import ServicesSection from "../components/Chat/Services";
+//import Login from "@/components/auth/Login";
 
-export default function SignInPage() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+import ChatToggle from "../components/Chat/ChatToggle";
+import Image from "next/image";
 
-  const handleGoogleLogin = async () => {
-    const csrfToken = await getCsrfToken();
-    if (csrfToken) {
-      const result = await signIn("google", { callbackUrl: "/timeline" });
-      if (result?.error) {
-        setError(result.error);
-      }
-    }
-  };
-
-  const handleGithubLogin = async () => {
-    const csrfToken = await getCsrfToken();
-    if (csrfToken) {
-      const result = await signIn("github", { callbackUrl: "/timeline" });
-      if (result?.error) {
-        setError(result.error);
-      }
-    }
-  };
-
-  const handleEmailPasswordLogin = async (email: string, password: string) => {
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.ok) {
-      router.push("/timeline");
-    } else {
-      setError(result?.error || "Login failed. Please check your credentials.");
-    }
-  };
-
-  const handleSignUp = () => {
-    // Redirect to the signup page
-    router.push("/signup");
-  };
-
+const Home: React.FC = () => {
   return (
-    <div className="w-full flex flex-col items-center justify-center min-h-screen py-2">
-      <div className="flex flex-col items-center mt-10 p-10 shadow-md">
-        <h1 className="mt-10 mb-4 text-4xl font-bold">Sign In</h1>
-        <GoogleSignInButton onClick={handleGoogleLogin} />
-        <GithubSignInButton onClick={handleGithubLogin} />
-        <span className="text-2xl font-semibold text-white text-center mt-8">
-          Or
-        </span>
-        <CredentialsForm onSubmit={handleEmailPasswordLogin} />
-        {error && <p className="text-red-500 mt-4">{error}</p>}
-        <button
-          onClick={handleSignUp}
-          className="w-full flex items-center font-semibold justify-center h-14 px-6 mt-4 text-xl transition-colors duration-300 bg-blue-600 text-white rounded-lg focus:shadow-outline hover:bg-blue-700"
-        >
-          Sign Up
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Header */}
+      <Header />
+
+      {/* landing image Section */}
+      <section className="relative w-full flex items-center justify-center bg-blue-900 text-white py-20">
+        <div className="absolute inset-0">
+          <Image
+            src="/h1.jpg"
+            alt="Hospital"
+            fill
+            style={{ objectFit: 'cover' }}
+            className="opacity-50"
+          />
+        </div>
+        <div className="relative z-10 text-center px-6">
+          <h1 className="text-5xl font-bold mb-4">Welcome to Our Hospital</h1>
+          <p className="text-lg mb-8">Providing exceptional healthcare services with compassionate care.</p>
+          
+          <ChatToggle />
+        </div>
+      </section>
+
+      {/* Navigation */}
+      <nav className="bg-blue-900 text-white py-4">
+        <div className="container mx-auto flex justify-center">
+          <a href="#services" className="mx-4 hover:text-gray-300"></a>
+        </div>
+      </nav>
+
+      {/* Services Section */}
+      <section id="services" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-semibold text-blue-900 mb-8 text-center"></h2>
+          <ServicesSection />
+        </div>
+      </section>
+
+     
+
+      {/* Footer */}
+      <footer className="bg-blue-900 text-white py-4">
+        <div className="container mx-auto text-center">
+          <p>&copy; {new Date().getFullYear()} Hospital. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
-}
+};
+
+export default Home;

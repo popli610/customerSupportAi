@@ -25,11 +25,16 @@ export function CredentialsForm(props: CredentialsFormProps) {
 
     if (signInResponse && !signInResponse.error) {
       // Redirect to homepage (/timeline)
-      router.push("/timeline");
+      router.push("/");
     } else {
       console.log("Error: ", signInResponse);
       setError("Your Email or Password is wrong!");
     }
+  };
+
+  const handleSignUp = () => {
+    // Redirect to the signup page
+    router.push("/signup");
   };
 
   return (
@@ -58,12 +63,21 @@ export function CredentialsForm(props: CredentialsFormProps) {
         className="w-full px-4 py-4 mb-4 border border-gray-300 rounded-md"
       />
 
-      <button
-        type="submit"
-        className="w-full h-12 px-6 mt-4 text-lg text-white transition-colors duration-150 bg-blue-600 rounded-lg focus:shadow-outline hover:bg-blue-700"
-      >
-        Log in
-      </button>
+      <div className="flex w-full justify-between">
+        <button
+          type="submit"
+          className="w-1/2 h-12 px-6 text-lg text-white transition-colors duration-150 bg-blue-600 rounded-lg focus:shadow-outline hover:bg-blue-700"
+        >
+          Log in
+        </button>
+        <button
+          type="button"
+          onClick={handleSignUp}
+          className="w-1/2 h-12 px-6 text-lg text-white transition-colors duration-150 bg-blue-600 rounded-lg focus:shadow-outline hover:bg-blue-700 ml-4"
+        >
+          Sign Up
+        </button>
+      </div>
     </form>
   );
 }

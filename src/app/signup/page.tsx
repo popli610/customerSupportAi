@@ -7,11 +7,13 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { addUserToFirestore } from "@/lib/firestoreUtils";
 import Image from "next/image";
-import googleLogo from "../../../public/google.png";
-import githubLogo from "../../../public/github.png";
+import googleLogo from "../../../public/google-logo.png";
+import githubLogo from "../../../public/github-logo.png";
+import mailLogo from "../../../public/mail.png"; // Importing the mail icon
 
 export default function SignupPage() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +26,9 @@ export default function SignupPage() {
       await addUserToFirestore({
         uid: user.uid,
         email: user.email || "unknown@example.com",
-        name: user.displayName || "Anonymous",
+        name: displayName || "Anonymous",
       });
-      router.push("/timeline"); // Redirect to the timeline page after successful sign-up
+      router.push("/"); // Redirect to the timeline page after successful sign-up
     } catch (error) {
       setError("Error signing up. Please try again.");
       console.error("Sign-up error:", error);
@@ -34,11 +36,11 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignUp = () => {
-    signIn("google", { callbackUrl: "/timeline" });
+    signIn("google", { callbackUrl: "/" });
   };
 
   const handleGithubSignUp = () => {
-    signIn("github", { callbackUrl: "/timeline" });
+    signIn("github", { callbackUrl: "/" });
   };
 
   return (
@@ -47,6 +49,14 @@ export default function SignupPage() {
         <h1 className="mt-10 mb-4 text-4xl font-bold">Sign Up</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSignup} className="w-full flex flex-col items-center">
+        <input
+            type="name"
+            placeholder="Name"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+            className="mb-4 p-2 border rounded w-64 text-black" // Added text-black class
+          />
           <input
             type="email"
             placeholder="Email"
@@ -63,8 +73,13 @@ export default function SignupPage() {
             required
             className="mb-4 p-2 border rounded w-64 text-black" // Added text-black class
           />
-          <button type="submit" className="w-64 p-2 bg-blue-500 text-white rounded">
-            Sign Up with Email
+          
+          <button
+            type="submit"
+            className="w-64 p-2 bg-blue-500 text-white rounded flex items-center justify-center"
+          >
+            <Image src={mailLogo} alt="Mail Logo" width={20} height={20} />
+            <span className="ml-2">Sign Up with Email</span>
           </button>
         </form>
         <div className="w-full flex flex-col items-center mt-4">
