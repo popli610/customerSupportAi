@@ -57,12 +57,6 @@ export default function SignInPage() {
       <div className="flex flex-col items-center mt-10 p-10 shadow-md">
         <h1 className="mt-10 mb-4 text-4xl font-bold">Sign In</h1>
         <CredentialsForm onSubmit={handleEmailPasswordLogin} />
-        {/* <button
-          onClick={handleSignUp}
-          className="w-full flex items-center font-semibold justify-center h-14 px-6 mt-4 text-lg transition-colors duration-300 bg-blue-600 text-white rounded-lg focus:shadow-outline hover:bg-blue-700"
-        >
-          Sign Up
-        </button> */}
         <span className="text-2xl font-semibold text-white text-center mt-8">
           Or
         </span>

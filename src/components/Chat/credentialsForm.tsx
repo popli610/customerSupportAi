@@ -1,39 +1,33 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
+// Add the CredentialsFormProps interface here
 interface CredentialsFormProps {
   csrfToken?: string;
+  onSubmit: (email: string, password: string) => Promise<void>;
 }
 
-export function CredentialsForm(props: CredentialsFormProps) {
+export function CredentialsForm({ onSubmit }: CredentialsFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
-  // Explicitly define the type for 'e' (event)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
 
-    const signInResponse = await signIn("credentials", {
-      email: data.get("email"),
-      password: data.get("password"),
-      redirect: false,
-    });
+    const email = data.get("email") as string;
+    const password = data.get("password") as string;
 
-    if (signInResponse && !signInResponse.error) {
-      // Redirect to homepage (/timeline)
-      router.push("/");
-    } else {
-      console.log("Error: ", signInResponse);
+    try {
+      await onSubmit(email, password);
+    } catch (err) {
       setError("Your Email or Password is wrong!");
     }
   };
 
   const handleSignUp = () => {
-    // Redirect to the signup page
     router.push("/signup");
   };
 
