@@ -10,8 +10,8 @@ const Header: React.FC = () => {
         </div>
         <nav>
           <a href="#services" className="mx-4 hover:text-gray-300">Services</a>
-          <a href="http://localhost:3000/signin" className="mx-4 hover:text-gray-300">Login</a>
-          <a href="http://localhost:3000/signup" className="mx-4 hover:text-gray-300">Signup</a>
+          <a href="https://healthcare-chatbot-ai.vercel.app/signin" className="mx-4 hover:text-gray-300">Login</a>
+          <a href="https://healthcare-chatbot-ai.vercel.app/signup" className="mx-4 hover:text-gray-300">Signup</a>
         </nav>
       </div>
     </header>
