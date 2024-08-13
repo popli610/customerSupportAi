@@ -29,10 +29,16 @@ interface Message {
   role: "assistant" | "user";
   options?: string[];
 }
+interface TimeSlot {
+  id: string;
+  date: string;
+  time: string;
+  is_booked: boolean; 
+}
 
 import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../../lib/firebase"; // Adjust the path to your firebaseConfig file
-import { TimeSlot } from "../../interfaces/TimeSlot"; // Import your TimeSlot interface
+//import { TimeSlot } from "../../interfaces/TimeSlot"; // Import your TimeSlot interface
 
 import { doc, updateDoc } from "firebase/firestore";
 
